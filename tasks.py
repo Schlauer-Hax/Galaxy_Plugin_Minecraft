@@ -13,7 +13,6 @@
 import os
 import sys
 import json
-import tempfile
 from shutil import rmtree
 from distutils.dir_util import copy_tree
 
@@ -29,7 +28,7 @@ with open(os.path.join("src", "manifest.json"), "r") as f:
 
 if sys.platform == "win32":
     DIST_DIR = os.environ["localappdata"] + "\\GOG.com\\Galaxy\\plugins\\installed"
-    PIP_PLATFORM = "win32"
+    PIP_PLATFORM = "win_amd64"
 elif sys.platform == "darwin":
     DIST_DIR = os.path.realpath("~/Library/Application Support/GOG.com/Galaxy/plugins/installed")
     PIP_PLATFORM = "macosx_10_13_x86_64"  # @see https://github.com/FriendsOfGalaxy/galaxy-integrations-updater/blob/master/scripts.py
@@ -48,28 +47,22 @@ def build(c, output="build", ziparchive=None):
         print_task("--> Removing {} directory".format(output))
         rmtree(output)
 
-    # Firstly dependencies needs to be "flatten" with pip-compile as pip requires --no-deps if --platform is used
-    print_task("--> Flattening dependencies to temporary requirements file")
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp:
-        c.run(f"pip-compile requirements/app.txt --output-file=-", out_stream=tmp)
-
-    # Then install all stuff with pip to output folder
+    # Galaxy runs plugins on its bundled 64-bit Python 3.13
     print_task("--> Installing with pip for specific version")
     args = [
         "pip",
         "install",
         "-r",
-        tmp.name,
+        "requirements/app.txt",
         "--python-version",
-        "37",
+        "313",
         "--platform",
         PIP_PLATFORM,
+        "--only-binary=:all:",
         '--target "{}"'.format(output),
         "--no-compile",
-        "--no-deps",
     ]
     c.run(" ".join(args), echo=True)
-    os.unlink(tmp.name)
 
     print_task("--> Copying source files")
     copy_tree("src", output)
