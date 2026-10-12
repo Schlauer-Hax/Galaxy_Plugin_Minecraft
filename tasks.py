@@ -26,6 +26,8 @@ colorama.init()
 with open(os.path.join("src", "manifest.json"), "r") as f:
     MANIFEST = json.load(f)
 
+GALAXY_API = "git+https://github.com/gogcom/galaxy-integrations-python-api@6e483ed"
+
 if sys.platform == "win32":
     DIST_DIR = os.environ["localappdata"] + "\\GOG.com\\Galaxy\\plugins\\installed"
     PIP_PLATFORM = "win_amd64"
@@ -63,6 +65,8 @@ def build(c, output="build", ziparchive=None):
         "--no-compile",
     ]
     c.run(" ".join(args), echo=True)
+    # PyPI stops at galaxy.plugin.api 0.69, which breaks on Python 3.9+ (json.loads encoding=)
+    c.run(f'pip install --no-deps --upgrade --ignore-requires-python --target "{output}" "{GALAXY_API}"', echo=True)
 
     print_task("--> Copying source files")
     copy_tree("src", output)
