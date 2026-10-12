@@ -74,7 +74,7 @@ def compare(x, y):
         return y
     if y is None:
         return x
-    return min(x, y)
+    return max(x, y)
 
 
 def IS(items, *, IN):

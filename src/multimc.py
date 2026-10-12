@@ -24,6 +24,9 @@ class MultiMCClient:
             if IS_WINDOWS
             else os.path.join(self.folder, "Contents", "MacOS", "instances")
         )
+        # Prism Launcher (non-portable) keeps instances in %APPDATA%
+        if IS_WINDOWS and not os.path.isdir(self.instances_path):
+            self.instances_path = os.path.join(os.environ["APPDATA"], "PrismLauncher", "instances")
         log.debug(f"MultiMC instances path: {self.instances_path}")
         self.process = None
 
@@ -40,9 +43,9 @@ class MultiMCClient:
                             if split_line[0] == "totalTimePlayed":
                                 time += int(split_line[1])
                             elif split_line[0] == "lastLaunchTime":
-                                lastPlayed = misc.compare(lastPlayed, int(split_line[1]))
+                                lastPlayed = misc.compare(lastPlayed, int(split_line[1]) // 1000)
         log.debug(f"Got total MultiMC Time: {time / 60}")
-        return GameTime(GameID, time / 60, lastPlayed)
+        return GameTime(GameID, time // 60, lastPlayed)
 
     def launch(self):
         self.process = misc.open_path(self.path)
