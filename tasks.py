@@ -13,8 +13,7 @@
 import os
 import sys
 import json
-from shutil import rmtree
-from distutils.dir_util import copy_tree
+from shutil import rmtree, copytree
 
 from invoke import task
 from galaxy.tools import zip_folder_to_file
@@ -69,7 +68,7 @@ def build(c, output="build", ziparchive=None):
     c.run(f'pip install --no-deps --upgrade --ignore-requires-python --target "{output}" "{GALAXY_API}"', echo=True)
 
     print_task("--> Copying source files")
-    copy_tree("src", output)
+    copytree("src", output, dirs_exist_ok=True)
 
     if ziparchive is not None:
         print_task("--> Compressing to {}".format(ziparchive))
@@ -82,7 +81,7 @@ def hotfix(c):
     # plugin has crashed and you want to update it without having to restart GOG
     # Galaxy or disconnect the plugin
     dist_path = os.path.join(DIST_DIR, f"{MANIFEST['platform']}_{MANIFEST['guid']}")
-    copy_tree("src", dist_path)
+    copytree("src", dist_path, dirs_exist_ok=True)
 
 
 @task
